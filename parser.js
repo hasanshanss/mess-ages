@@ -4,7 +4,7 @@ const fs = require("fs");
 class Parser {
   #url = null;
   #data_buffer = [];
-  _browser = null;
+  #browser = null;
 
   constructor(url) {
     this.#url = url;
@@ -12,6 +12,10 @@ class Parser {
 
   get Url() {
     return "https://" + this.#url;
+  }
+
+  async launchBrowser(){
+    this.#browser = await puppeteer.launch({headless: false});
   }
 
   writeToFile(json_array) {
@@ -29,15 +33,13 @@ class Parser {
   async login(username, password) {
     
     // const browser = await puppeteer.launch({headless: false});
-    this._browser = await puppeteer.launch({headless: false});
-    // this._browser = browser;
+    // this._browser = await puppeteer.launch({headless: false});
 
-    const page = await browser.newPage();
+    const page = await this.#browser.newPage();
       await page.goto(this.Url, {
         waitUntil: 'load',
         timeout: 0
      });
-      
      
       await page.waitForSelector('input[name="username"]');
      
@@ -48,14 +50,19 @@ class Parser {
       await passwordInput.type(password);
 
       // await page.screenshot({ path: "1.png" });
+
       await page.click('button[type ="submit"]');
+
+      
       try {
         // slfErrorAlert
+        
         await page.waitForSelector('input[name="verificationCode"]',  { timeout: 5000 });
         return true;
       } catch(e){
         return false;
       }
+      
     // await browser.close();
   }
 
@@ -63,7 +70,7 @@ class Parser {
       const verificationInput = await page.$("input[name ='verificationCode']");
       await verificationInput.type(ocp);
       await page.click('form button');
-      // this._browser.close();
+      
   }
 }
 
